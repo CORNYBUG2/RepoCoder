@@ -1,0 +1,11 @@
+# Ignore the .vscode folder (local editor settings)
+.vscode/
+
+# Ignore the config file (sensitive or environment-specific data)
+config/
+config.*
+
+# Ignore the .gitignore file itself
+.gitignor
+
+**/__pycache__/
