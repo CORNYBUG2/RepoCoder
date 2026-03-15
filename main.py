@@ -11,6 +11,7 @@ def main():
 
     repo_path = r"D:\Repocoder\repocoder"
 
+    # --- index repository ---
     loader = RepositoryLoader(repo_path)
     files = loader.load_files()
 
@@ -22,32 +23,20 @@ def main():
 
     retriever = SparseRetriever(snippets)
 
-    query = "loss ="
-    results = retriever.retrieve(query, top_k=3)
-
-    # user code we want to complete
+    # code we want to complete
     query_code = """
 def train_step(x, y):
     output = model(x)
     loss =
 """
 
-    # ---- build prompt ----
+    # components
     builder = PromptBuilder()
-    prompt = builder.build_prompt(query_code, results)
-
-    print("\nPrompt sent to model:\n")
-    print(prompt[:400])
-
-    # ---- generate completion ----
     generator = LLMGenerator()
-    generated_output = generator.generate(prompt)
-
-    print("\nGenerated completion:\n")
-    print(generated_output[-400:])
 
     controller = IterationController(retriever, builder, generator)
 
+    # run RepoCoder pipeline
     final_output = controller.run(query_code)
 
     print("\nFinal generated code:\n")
