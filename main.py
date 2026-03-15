@@ -4,6 +4,7 @@ from repository.sliding_window import SlidingWindowChunker
 from retriever.sparse_retriever import SparseRetriever
 from generator.prompt_builder import PromptBuilder
 from generator.llm_generator import LLMGenerator
+from iterative.iteration_controller import IterationController
 
 
 def main():
@@ -44,6 +45,13 @@ def train_step(x, y):
 
     print("\nGenerated completion:\n")
     print(generated_output[-400:])
+
+    controller = IterationController(retriever, builder, generator)
+
+    final_output = controller.run(query_code)
+
+    print("\nFinal generated code:\n")
+    print(final_output[-400:])
 
 
 if __name__ == "__main__":
