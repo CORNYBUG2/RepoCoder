@@ -2,6 +2,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
 
+# Generator thing 
+
 class LLMGenerator:
 
     def __init__(self, model_name="deepseek-ai/deepseek-coder-1.3b-base"):
