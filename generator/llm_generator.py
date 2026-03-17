@@ -2,7 +2,6 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
 
-# Generator thing 
 
 class LLMGenerator:
 
