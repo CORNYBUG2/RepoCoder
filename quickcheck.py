@@ -1,6 +1,5 @@
 import transformers
 import torch
-import torch
 
 print("Transformers:", transformers.__version__)
 
