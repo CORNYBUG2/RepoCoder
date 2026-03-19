@@ -42,6 +42,7 @@ def train_step(x, y):
     print("\nFinal generated code:\n")
     print(final_output[-400:])
 
+# main function
 
 if __name__ == "__main__":
     main()
