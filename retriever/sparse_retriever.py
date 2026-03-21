@@ -1,10 +1,12 @@
 import re
 
+from retriever.base_retriever import BaseRetriever
 
-class SparseRetriever:
+
+class SparseRetriever(BaseRetriever):
 
     def __init__(self, snippets):
-        self.snippets = snippets
+        super().__init__(snippets)
 
     # Better tokenizer
     def tokenize(self, text):

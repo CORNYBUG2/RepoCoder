@@ -1,3 +1,6 @@
+import argparse
+from pathlib import Path
+
 from repository.loader import RepositoryLoader
 from repository.file_scanner import FileScanner
 from repository.sliding_window import SlidingWindowChunker
@@ -8,8 +11,15 @@ from iterative.iteration_controller import IterationController
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Run RepoCoder prototype pipeline")
+    parser.add_argument(
+        "--repo-path",
+        default=str(Path(__file__).resolve().parent),
+        help="Path to repository that should be indexed",
+    )
+    args = parser.parse_args()
 
-    repo_path = r"D:\Repocoder\repocoder"
+    repo_path = args.repo_path
 
     # --- index repository ---
     loader = RepositoryLoader(repo_path)
