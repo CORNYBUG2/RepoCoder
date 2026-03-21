@@ -1,61 +1,109 @@
-import re
+import os
+import math
+from collections import Counter, defaultdict
 
-from retriever.base_retriever import BaseRetriever
 
+class SparseRetriever:
 
-class SparseRetriever(BaseRetriever):
+    def __init__(self, base_path):
+        self.base_path = base_path
 
-    def __init__(self, snippets):
-        super().__init__(snippets)
+        self.documents = []
+        self.doc_freq = defaultdict(int)
+        self.doc_term_counts = []
+        self.N = 0
 
-    # Better tokenizer
-    def tokenize(self, text):
+        self.EXCLUDE_DIRS = {"repoenv", "venv", ".git", "__pycache__", "site-packages"}
 
-        words = re.findall(r"[A-Za-z_]+", text)
+        self.STOPWORDS = {
+            "def", "return", "import", "from", "class", "self",
+            "for", "while", "if", "else", "try", "except"
+        }
 
-        tokens = set()
+        self._index_repository()
 
-        for w in words:
-            w = w.lower()
-            tokens.add(w)
-            tokens.update(w.split("_"))
+    def _tokenize(self, text):
+        return [
+            t for t in text.lower().split()
+            if t not in self.STOPWORDS and len(t) > 2
+        ]
 
-        return tokens
+    def _chunk_text(self, text, size=300, overlap=50):
+        lines = text.split("\n")
+        chunks = []
+        for i in range(0, len(lines), size - overlap):
+            chunk = "\n".join(lines[i:i + size])
+            chunks.append(chunk)
+        return chunks
 
-    def jaccard_similarity(self, set1, set2):
+    def _index_repository(self):
 
-        if not set1 or not set2:
-            return 0
+        for root, dirs, files in os.walk(self.base_path):
 
-        intersection = set1.intersection(set2)
-        union = set1.union(set2)
+            dirs[:] = [d for d in dirs if d not in self.EXCLUDE_DIRS]
 
-        return len(intersection) / len(union)
+            for file in files:
+                if not file.endswith(".py"):
+                    continue
 
-    def retrieve(self, query, top_k=5):
+                file_path = os.path.join(root, file)
 
-        query_tokens = self.tokenize(query)
+                if any(excluded in file_path for excluded in self.EXCLUDE_DIRS):
+                    continue
 
-        scored_snippets = []
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        text = f.read()
+                except:
+                    continue
 
-        for snippet in self.snippets:
+                chunks = self._chunk_text(text)
 
-            # re-tokenize snippet content using improved tokenizer
-            snippet_tokens = self.tokenize(snippet["content"])
+                for chunk in chunks:
+                    tokens = self._tokenize(chunk)
+                    term_counts = Counter(tokens)
 
-            score = self.jaccard_similarity(query_tokens, snippet_tokens)
+                    self.documents.append({
+                        "path": file_path,
+                        "content": chunk,
+                        "tokens": tokens
+                    })
 
-            # boost score if important keywords appear
-            if "loss" in snippet_tokens:
-                score += 0.3
+                    self.doc_term_counts.append(term_counts)
 
-            scored_snippets.append((score, snippet))
+                    for term in term_counts.keys():
+                        self.doc_freq[term] += 1
 
-        scored_snippets.sort(key=lambda x: x[0], reverse=True)
+        self.N = len(self.documents)
 
-        # Debug output
-        print("\nTop retrieved snippets:")
-        for score, snippet in scored_snippets[:top_k]:
-            print(score, snippet["file_path"])
+    def _tf_idf(self, term, term_counts):
+        tf = term_counts[term]
+        df = self.doc_freq.get(term, 1)
+        idf = math.log((self.N + 1) / (df + 1)) + 1
+        return tf * idf
 
-        return [s[1] for s in scored_snippets[:top_k]]
+    def retrieve(self, query, top_k=3):
+
+        query_tokens = self._tokenize(query)
+        query_counts = Counter(query_tokens)
+
+        scores = []
+
+        for idx, doc in enumerate(self.documents):
+            score = 0
+            term_counts = self.doc_term_counts[idx]
+
+            for term in query_counts:
+                if term in term_counts:
+                    score += self._tf_idf(term, term_counts) * query_counts[term]
+
+            if score > 0:
+                scores.append({
+                    "file_path": doc["path"],
+                    "content": doc["content"],
+                    "score": score
+                })
+
+        scores.sort(key=lambda x: x["score"], reverse=True)
+
+        return scores[:top_k]

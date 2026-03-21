@@ -4,7 +4,16 @@ from iterative.stopping_criterion import StoppingCriterion
 
 class IterationController:
 
-    def __init__(self, retriever, prompt_builder, generator, max_iterations=2, top_k=3):
+    def __init__(
+        self,
+        retriever,
+        prompt_builder,
+        generator,
+        max_iterations=2,
+        top_k=3,
+        max_tokens=120,
+        temperature=0.0,
+    ):
 
         self.retriever = retriever
         self.prompt_builder = prompt_builder
@@ -12,6 +21,8 @@ class IterationController:
         self.query_constructor = QueryConstructor()
         self.stopping_criterion = StoppingCriterion(max_iterations=max_iterations)
         self.top_k = top_k
+        self.max_tokens = max_tokens
+        self.temperature = temperature
 
     def run(self, query_code):
         previous_output = None
@@ -19,9 +30,19 @@ class IterationController:
         current_output = ""
 
         for iteration in range(1, self.stopping_criterion.max_iterations + 1):
-            results = self.retriever.retrieve(current_query, top_k=self.top_k)
-            prompt = self.prompt_builder.build_prompt(query_code, results)
-            current_output = self.generator.generate(prompt)
+
+            # FIX: stronger retrieval query
+            search_query = current_query + " python function implementation logic return"
+
+            results = self.retriever.retrieve(search_query, top_k=self.top_k)
+
+            prompt = self.prompt_builder.build_prompt(current_query, results)
+    
+            current_output = self.generator.generate(
+                prompt,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+            )
 
             if self.stopping_criterion.should_stop(iteration, previous_output, current_output):
                 break

@@ -9,3 +9,5 @@ config.*
 .gitignor
 
 **/__pycache__/
+
+repoenv
