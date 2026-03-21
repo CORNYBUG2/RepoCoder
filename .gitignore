@@ -10,4 +10,15 @@ config.*
 
 **/__pycache__/
 
-repoenv
+repoenv/
+repoenv/*
+
+repoenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+
+D:\Repocoder\repocoder\repoenv\Lib\site-packages\filelock\__init__.py
