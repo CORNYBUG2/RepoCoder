@@ -1,0 +1,27 @@
+repo:
+  path: .
+  include_extensions:
+    - .py
+  ignore_dirs:
+    - .git
+    - __pycache__
+    - .venv
+    - venv
+    - node_modules
+
+chunking:
+  window_size: 20
+  step_size: 10
+
+retrieval:
+  type: sparse
+  top_k: 3
+
+generation:
+  model_name: deepseek-ai/deepseek-coder-1.3b-base
+  max_tokens: 120
+  temperature: 0.0
+
+iteration:
+  enabled: true
+  max_iterations: 2

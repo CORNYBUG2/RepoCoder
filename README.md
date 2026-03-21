@@ -62,6 +62,13 @@ pip install transformers accelerate
 python main.py
 ```
 
+Optional: pass a custom config or repo path.
+
+```
+python main.py --config config/config.yaml
+python main.py --repo-path D:/path/to/another/repo
+```
+
 ---
 
 ## Notes
