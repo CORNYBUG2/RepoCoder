@@ -31,9 +31,11 @@ class LLMGenerator:
         ).to(self.model.device)
 
         do_sample = temperature > 0
+
         generate_kwargs = {
             "max_new_tokens": max_tokens,
             "do_sample": do_sample,
+            "eos_token_id": self.tokenizer.eos_token_id,
         }
 
         if do_sample:
@@ -45,4 +47,10 @@ class LLMGenerator:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        input_ids = inputs["input_ids"]
+        generated_ids = outputs[0][input_ids.shape[-1]:]
+
+        generated = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        generated = generated.strip().split("\n")[0]
+
+        return generated.strip()

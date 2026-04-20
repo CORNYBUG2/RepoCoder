@@ -13,8 +13,8 @@ class IterationController:
         top_k=3,
         max_tokens=120,
         temperature=0.0,
+        mode="rag",
     ):
-
         self.retriever = retriever
         self.prompt_builder = prompt_builder
         self.generator = generator
@@ -23,21 +23,35 @@ class IterationController:
         self.top_k = top_k
         self.max_tokens = max_tokens
         self.temperature = temperature
+        self.mode = mode
 
     def run(self, query_code):
+
+        # ---------- COMPLETION MODE ----------
+        if self.mode == "completion":
+            prompt = self.prompt_builder.build_completion_prompt(query_code)
+
+            output = self.generator.generate(
+                prompt,
+                max_tokens=20,
+                temperature=0.0
+            )
+
+            return output.strip()
+
+        # ---------- RAG MODE ----------
         previous_output = None
         current_query = query_code
         current_output = ""
 
         for iteration in range(1, self.stopping_criterion.max_iterations + 1):
 
-            # FIX: stronger retrieval query
             search_query = current_query + " python function implementation logic return"
 
             results = self.retriever.retrieve(search_query, top_k=self.top_k)
 
             prompt = self.prompt_builder.build_prompt(current_query, results)
-    
+
             current_output = self.generator.generate(
                 prompt,
                 max_tokens=self.max_tokens,
@@ -50,4 +64,4 @@ class IterationController:
             previous_output = current_output
             current_query = self.query_constructor.construct_query(query_code, current_output)
 
-        return current_output
+        return current_output.strip()
