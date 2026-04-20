@@ -97,9 +97,8 @@ def main():
 
     # code we want to complete
     query_code = """
-def train_step(x, y):
-    output = model(x)
-    loss =
+for i in range(10):
+    print(
 """
 
     # components
@@ -114,7 +113,8 @@ def train_step(x, y):
         top_k=retrieval_cfg["top_k"],
         max_tokens=generation_cfg["max_tokens"],
         temperature=generation_cfg["temperature"],
-    )
+        mode="completion"
+)
 
     # run RepoCoder pipeline
     final_output = controller.run(query_code)
